@@ -1,0 +1,328 @@
+import { useNavigate } from 'react-router-dom';
+import { Button, Card } from '../components/ui';
+import { useForm } from '../context/FormContext';
+import { calculatePoints, getCompletionStatus } from '../utils/pointsCalculator';
+import { allActivities, POINTS_THRESHOLDS } from '../data';
+
+export function Summary() {
+  const navigate = useNavigate();
+  const { formState, getResponse, clearAllData } = useForm();
+
+  const points = calculatePoints(formState);
+  const completion = getCompletionStatus(formState);
+
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleStartOver = () => {
+    if (window.confirm('This will clear all your saved answers. Are you sure?')) {
+      clearAllData();
+      navigate('/');
+    }
+  };
+
+  const getRateLabel = (rate: 'none' | 'standard' | 'enhanced') => {
+    switch (rate) {
+      case 'enhanced': return 'Enhanced rate';
+      case 'standard': return 'Standard rate';
+      default: return 'Not eligible';
+    }
+  };
+
+  const getRateColor = (rate: 'none' | 'standard' | 'enhanced') => {
+    switch (rate) {
+      case 'enhanced': return 'bg-green-900/50 text-green-300';
+      case 'standard': return 'bg-blue-900/50 text-blue-300';
+      default: return 'bg-slate-700 text-slate-400';
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <h1 className="text-2xl font-bold text-slate-100">
+        Your PIP Summary
+      </h1>
+
+      <Card className="bg-amber-900/30 border-amber-700">
+        <h2 className="font-semibold text-amber-200 mb-2">Important disclaimer</h2>
+        <p className="text-amber-300 text-sm">
+          This is an <strong>estimate only</strong> based on your answers. The actual decision
+          is made by the DWP after they review your form and assessment. This tool cannot
+          guarantee any outcome. Many successful claims require mandatory reconsideration
+          or tribunal appeal.
+        </p>
+      </Card>
+
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card>
+          <h2 className="text-lg font-semibold text-slate-100 mb-4">
+            Daily Living Component
+          </h2>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Estimated points:</span>
+              <span className="text-2xl font-bold text-slate-100">{points.dailyLiving.points}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Threshold:</span>
+              <span className="text-sm text-slate-500">
+                Standard: {POINTS_THRESHOLDS.dailyLiving.standard}+ |
+                Enhanced: {POINTS_THRESHOLDS.dailyLiving.enhanced}+
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Estimated rate:</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRateColor(points.dailyLiving.rate)}`}>
+                {getRateLabel(points.dailyLiving.rate)}
+              </span>
+            </div>
+            {points.dailyLiving.weeklyAmount > 0 && (
+              <div className="pt-2 border-t border-slate-700">
+                <span className="text-slate-400">Estimated weekly:</span>
+                <span className="float-right font-semibold text-slate-100">£{points.dailyLiving.weeklyAmount.toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+        </Card>
+
+        <Card>
+          <h2 className="text-lg font-semibold text-slate-100 mb-4">
+            Mobility Component
+          </h2>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Estimated points:</span>
+              <span className="text-2xl font-bold text-slate-100">{points.mobility.points}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Threshold:</span>
+              <span className="text-sm text-slate-500">
+                Standard: {POINTS_THRESHOLDS.mobility.standard}+ |
+                Enhanced: {POINTS_THRESHOLDS.mobility.enhanced}+
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-slate-400">Estimated rate:</span>
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRateColor(points.mobility.rate)}`}>
+                {getRateLabel(points.mobility.rate)}
+              </span>
+            </div>
+            {points.mobility.weeklyAmount > 0 && (
+              <div className="pt-2 border-t border-slate-700">
+                <span className="text-slate-400">Estimated weekly:</span>
+                <span className="float-right font-semibold text-slate-100">£{points.mobility.weeklyAmount.toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
+
+      {points.totalWeekly > 0 && (
+        <Card variant="highlighted">
+          <h2 className="text-lg font-semibold text-slate-100 mb-4">
+            Estimated Total
+          </h2>
+          <div className="grid grid-cols-3 gap-4 text-center">
+            <div>
+              <p className="text-2xl font-bold text-primary-400">£{points.totalWeekly.toFixed(2)}</p>
+              <p className="text-sm text-slate-400">per week</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-primary-400">£{points.totalMonthly.toFixed(2)}</p>
+              <p className="text-sm text-slate-400">per month</p>
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-primary-400">£{points.totalYearly.toFixed(2)}</p>
+              <p className="text-sm text-slate-400">per year</p>
+            </div>
+          </div>
+        </Card>
+      )}
+
+      <Card>
+        <h2 className="text-lg font-semibold text-slate-100 mb-4">
+          Points Breakdown
+        </h2>
+
+        {completion.total.completed < completion.total.total && (
+          <p className="text-amber-400 text-sm mb-4">
+            Note: You haven't answered all questions ({completion.total.completed} of {completion.total.total} complete).
+          </p>
+        )}
+
+        <div className="space-y-6">
+          <div>
+            <h3 className="font-medium text-slate-200 mb-2">Daily Living Activities</h3>
+            <div className="space-y-2">
+              {allActivities
+                .filter(a => a.category === 'daily-living')
+                .map(activity => {
+                  const response = getResponse(activity.id);
+                  const descriptor = response?.selectedDescriptorId
+                    ? activity.descriptors.find(d => d.id === response.selectedDescriptorId)
+                    : null;
+
+                  return (
+                    <div
+                      key={activity.id}
+                      className="flex justify-between items-center py-2 border-b border-slate-700 last:border-0"
+                    >
+                      <div className="flex-1">
+                        <button
+                          onClick={() => navigate(`/activity/${allActivities.indexOf(activity)}`)}
+                          className="text-left text-slate-300 hover:text-primary-400"
+                        >
+                          {activity.name}
+                        </button>
+                        {descriptor && (
+                          <p className="text-xs text-slate-500 mt-0.5 truncate max-w-xs">
+                            {descriptor.plainEnglish}
+                          </p>
+                        )}
+                      </div>
+                      <span className={`
+                        px-2 py-0.5 rounded text-sm font-medium
+                        ${descriptor
+                          ? descriptor.points > 0
+                            ? 'bg-primary-900/50 text-primary-300'
+                            : 'bg-slate-700 text-slate-400'
+                          : 'bg-amber-900/50 text-amber-300'
+                        }
+                      `}>
+                        {descriptor ? `${descriptor.points} pts` : 'Not answered'}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="font-medium text-slate-200 mb-2">Mobility Activities</h3>
+            <div className="space-y-2">
+              {allActivities
+                .filter(a => a.category === 'mobility')
+                .map(activity => {
+                  const response = getResponse(activity.id);
+                  const descriptor = response?.selectedDescriptorId
+                    ? activity.descriptors.find(d => d.id === response.selectedDescriptorId)
+                    : null;
+
+                  return (
+                    <div
+                      key={activity.id}
+                      className="flex justify-between items-center py-2 border-b border-slate-700 last:border-0"
+                    >
+                      <div className="flex-1">
+                        <button
+                          onClick={() => navigate(`/activity/${allActivities.indexOf(activity)}`)}
+                          className="text-left text-slate-300 hover:text-primary-400"
+                        >
+                          {activity.name}
+                        </button>
+                        {descriptor && (
+                          <p className="text-xs text-slate-500 mt-0.5 truncate max-w-xs">
+                            {descriptor.plainEnglish}
+                          </p>
+                        )}
+                      </div>
+                      <span className={`
+                        px-2 py-0.5 rounded text-sm font-medium
+                        ${descriptor
+                          ? descriptor.points > 0
+                            ? 'bg-primary-900/50 text-primary-300'
+                            : 'bg-slate-700 text-slate-400'
+                          : 'bg-amber-900/50 text-amber-300'
+                        }
+                      `}>
+                        {descriptor ? `${descriptor.points} pts` : 'Not answered'}
+                      </span>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card>
+        <h2 className="text-lg font-semibold text-slate-100 mb-4">
+          Your Notes
+        </h2>
+        <div className="space-y-4">
+          {allActivities.map(activity => {
+            const response = getResponse(activity.id);
+            const hasNotes = response?.badDayDescription || response?.goodDayDescription || response?.userNotes;
+
+            if (!hasNotes) return null;
+
+            return (
+              <div key={activity.id} className="border-b border-slate-700 pb-4 last:border-0">
+                <h3 className="font-medium text-slate-200">{activity.name}</h3>
+                {response?.badDayDescription && (
+                  <div className="mt-2">
+                    <p className="text-xs font-medium text-slate-500">Bad days:</p>
+                    <p className="text-sm text-slate-300">{response.badDayDescription}</p>
+                  </div>
+                )}
+                {response?.goodDayDescription && (
+                  <div className="mt-2">
+                    <p className="text-xs font-medium text-slate-500">Good days:</p>
+                    <p className="text-sm text-slate-300">{response.goodDayDescription}</p>
+                  </div>
+                )}
+                {response?.userNotes && (
+                  <div className="mt-2">
+                    <p className="text-xs font-medium text-slate-500">Notes:</p>
+                    <p className="text-sm text-slate-300">{response.userNotes}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </Card>
+
+      <Card>
+        <h2 className="text-lg font-semibold text-slate-100 mb-4">
+          Next Steps
+        </h2>
+        <ol className="space-y-3 text-slate-300">
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-primary-900/50 rounded-full flex items-center justify-center text-primary-300 text-sm font-semibold">1</span>
+            <span>Print or save this summary for your records</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-primary-900/50 rounded-full flex items-center justify-center text-primary-300 text-sm font-semibold">2</span>
+            <span>Use your notes to complete the official PIP2 form from the DWP</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-primary-900/50 rounded-full flex items-center justify-center text-primary-300 text-sm font-semibold">3</span>
+            <span>Gather supporting evidence (GP letters, care plans, medication lists)</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-primary-900/50 rounded-full flex items-center justify-center text-primary-300 text-sm font-semibold">4</span>
+            <span>Consider getting help from Citizens Advice or a welfare rights adviser</span>
+          </li>
+          <li className="flex gap-3">
+            <span className="flex-shrink-0 w-6 h-6 bg-primary-900/50 rounded-full flex items-center justify-center text-primary-300 text-sm font-semibold">5</span>
+            <span>Keep a copy of everything you send to the DWP</span>
+          </li>
+        </ol>
+      </Card>
+
+      <div className="flex flex-col sm:flex-row gap-4 justify-center no-print">
+        <Button onClick={handlePrint} variant="outline">
+          Print summary
+        </Button>
+        <Button onClick={() => navigate('/activity/0')} variant="outline">
+          Review answers
+        </Button>
+        <Button onClick={handleStartOver} variant="secondary">
+          Start over
+        </Button>
+      </div>
+    </div>
+  );
+}

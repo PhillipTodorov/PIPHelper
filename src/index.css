@@ -1,0 +1,50 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --text-size-multiplier: 1;
+}
+
+html {
+  font-size: calc(16px * var(--text-size-multiplier));
+}
+
+body {
+  @apply bg-slate-900 text-slate-100 antialiased;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  @apply outline-2 outline-offset-2 outline-primary-400;
+}
+
+/* Skip link for keyboard users */
+.skip-link {
+  @apply absolute -top-10 left-0 bg-primary-500 text-white px-4 py-2 z-50;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  @apply top-0;
+}
+
+/* Smooth scrolling for reduced motion preference */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Print styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
+
+  body {
+    background-color: white !important;
+    color: black !important;
+  }
+}
