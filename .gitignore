@@ -20,9 +20,8 @@ Thumbs.db
 nul
 
 # Screenshots and docs
-*.PNG
-*.png
-!public/*.png
+Capture*.PNG
+Capture*.png
 *.docx
 
 # Claude
