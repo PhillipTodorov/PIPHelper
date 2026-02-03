@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom';
 import { useAccessibility } from '../../context/AccessibilityContext';
+import { usePWAInstall } from '../../hooks/usePWAInstall';
 
 export function Header() {
   const { adjustTextSize } = useAccessibility();
+  const { canInstall, install } = usePWAInstall();
 
   return (
     <header className="bg-slate-800 border-b border-slate-700 sticky top-0 z-10">
@@ -19,6 +21,15 @@ export function Header() {
           </Link>
 
           <nav className="flex items-center gap-2" aria-label="Accessibility controls">
+            {canInstall && (
+              <button
+                onClick={install}
+                className="px-3 py-1.5 bg-primary-500 hover:bg-primary-400 text-white text-sm font-medium rounded-lg transition-colors"
+                aria-label="Install app"
+              >
+                Install App
+              </button>
+            )}
             <button
               onClick={() => adjustTextSize(-0.1)}
               className="p-2 text-slate-400 hover:text-slate-100 hover:bg-slate-700 rounded-lg"
