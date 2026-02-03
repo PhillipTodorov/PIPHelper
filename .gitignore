@@ -17,6 +17,16 @@ npm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+nul
+
+# Screenshots and docs
+*.PNG
+*.png
+!public/*.png
+*.docx
+
+# Claude
+.claude/
 
 # TypeScript cache
 *.tsbuildinfo
