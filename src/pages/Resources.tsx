@@ -42,12 +42,12 @@ export function Resources() {
       items: [
         {
           name: 'Mind',
-          url: 'https://www.mind.org.uk/information-support/guides-to-support-and-services/benefits/',
+          url: 'https://www.mind.org.uk/information-support/tips-for-everyday-living/money-and-mental-health/claiming-benefits/',
           description: 'Mental health charity with benefits guides and support'
         },
         {
           name: 'Rethink Mental Illness',
-          url: 'https://www.rethink.org/advice-and-information/living-with-mental-illness/money-benefits-and-employment/',
+          url: 'https://www.rethink.org/advice-and-information/living-with-mental-illness/money-benefits-poverty-and-mental-health/',
           description: 'Advice for people affected by severe mental illness'
         },
         {
@@ -82,7 +82,7 @@ export function Resources() {
       items: [
         {
           name: 'Haringey Citizens Advice',
-          url: 'https://www.haringeycabx.org.uk/',
+          url: 'https://citizensadviceharingey.org.uk/',
           description: 'Local Citizens Advice service for Haringey residents'
         },
         {
