@@ -1,12 +1,23 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import emailjs from '@emailjs/browser';
 import { Button, Card } from '../components/ui';
 import { useForm } from '../context/FormContext';
 import { calculatePoints, getCompletionStatus } from '../utils/pointsCalculator';
 import { allActivities, POINTS_THRESHOLDS } from '../data';
 
+// EmailJS credentials - these are public keys, safe to expose in client code
+const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE_ID || '';
+const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE_ID || '';
+const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_PUBLIC_KEY || '';
+
 export function Summary() {
   const navigate = useNavigate();
   const { formState, getResponse, clearAllData } = useForm();
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [email, setEmail] = useState('');
+  const [emailStatus, setEmailStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
+  const [emailError, setEmailError] = useState('');
 
   const points = calculatePoints(formState);
   const completion = getCompletionStatus(formState);
@@ -87,11 +98,53 @@ export function Summary() {
     return content;
   };
 
-  const handleEmail = () => {
-    const subject = 'My PIP Application Summary';
-    const body = generateEmailContent();
-    const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-    window.location.href = mailtoLink;
+  const handleEmailClick = () => {
+    if (!EMAILJS_SERVICE_ID || !EMAILJS_TEMPLATE_ID || !EMAILJS_PUBLIC_KEY) {
+      // Fallback to mailto if EmailJS not configured
+      const subject = 'My PIP Application Summary';
+      const body = generateEmailContent();
+      const mailtoLink = `mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailtoLink;
+      return;
+    }
+    setShowEmailModal(true);
+    setEmailStatus('idle');
+    setEmailError('');
+  };
+
+  const handleSendEmail = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!email || !email.includes('@')) {
+      setEmailError('Please enter a valid email address');
+      return;
+    }
+
+    setEmailStatus('sending');
+    setEmailError('');
+
+    try {
+      await emailjs.send(
+        EMAILJS_SERVICE_ID,
+        EMAILJS_TEMPLATE_ID,
+        {
+          to_email: email,
+          subject: 'Your PIP Application Summary',
+          message: generateEmailContent(),
+        },
+        EMAILJS_PUBLIC_KEY
+      );
+      setEmailStatus('success');
+      setTimeout(() => {
+        setShowEmailModal(false);
+        setEmail('');
+        setEmailStatus('idle');
+      }, 2000);
+    } catch (error) {
+      console.error('Email error:', error);
+      setEmailStatus('error');
+      setEmailError('Failed to send email. Please try again or use the print option.');
+    }
   };
 
   const handleStartOver = () => {
@@ -391,15 +444,68 @@ export function Summary() {
         </ol>
       </Card>
 
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-slate-800 rounded-lg p-6 max-w-md w-full border border-slate-700">
+            <h3 className="text-lg font-semibold text-slate-100 mb-4">
+              Email your summary
+            </h3>
+
+            {emailStatus === 'success' ? (
+              <div className="text-center py-4">
+                <div className="text-green-400 text-4xl mb-2">✓</div>
+                <p className="text-green-300">Email sent successfully!</p>
+              </div>
+            ) : (
+              <form onSubmit={handleSendEmail}>
+                <label htmlFor="email" className="block text-sm text-slate-400 mb-2">
+                  Enter your email address to receive a copy of your summary:
+                </label>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="your@email.com"
+                  className="w-full px-4 py-2 bg-slate-900 border border-slate-600 rounded-lg text-slate-100 placeholder-slate-500 focus:outline-none focus:border-primary-500"
+                  disabled={emailStatus === 'sending'}
+                  autoFocus
+                />
+
+                {emailError && (
+                  <p className="text-red-400 text-sm mt-2">{emailError}</p>
+                )}
+
+                <div className="flex gap-3 mt-4">
+                  <Button
+                    type="submit"
+                    variant="primary"
+                    disabled={emailStatus === 'sending'}
+                    className="flex-1"
+                  >
+                    {emailStatus === 'sending' ? 'Sending...' : 'Send email'}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={() => setShowEmailModal(false)}
+                    disabled={emailStatus === 'sending'}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="flex flex-col sm:flex-row gap-4 justify-center no-print flex-wrap">
-        <Button onClick={handleEmail} variant="primary">
+        <Button onClick={handleEmailClick} variant="primary">
           Email summary
         </Button>
         <Button onClick={handlePrint} variant="outline">
           Print summary
-        </Button>
-        <Button onClick={() => navigate('/activity/0')} variant="outline">
-          Review answers
         </Button>
         <Button onClick={handleStartOver} variant="secondary">
           Start over
