@@ -507,6 +507,9 @@ export function Summary() {
         <Button onClick={handlePrint} variant="outline">
           Print summary
         </Button>
+        <Button onClick={() => navigate('/resources')} variant="outline">
+          Helpful resources
+        </Button>
         <Button onClick={handleStartOver} variant="secondary">
           Start over
         </Button>
